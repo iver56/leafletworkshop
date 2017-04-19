@@ -9,12 +9,12 @@
 // bakgrunnsLag definerer kartdataene som vi viser i kartet. Vi har satt det opp
 // for dere, men til andre prosjekter kan dere hente data fra mapbox.com
 const bakgrunnsLag = L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
-    maxZoom: 18,
-    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
-        '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
-        'Imagery © <a href="http://mapbox.com">Mapbox</a>',
-    id: 'mapbox.streets',
-    accessToken: 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw'
+  maxZoom: 18,
+  attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+  '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+  'Imagery © <a href="http://mapbox.com">Mapbox</a>',
+  id: 'mapbox.streets',
+  accessToken: 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw'
 });
 
 // map definerer selve kartet. Vi bruker den hver gang vi skal legge til noe i
@@ -39,9 +39,9 @@ map.addLayer(bakgrunnsLag);
  om hvor vi klikket. Fyll inn onMapClick for å skrive ut lengde- og breddegrad i
  konsollen. Se http://leafletjs.com/examples/quick-start/#dealing-with-events
  for hjelp.
-*/
+ */
 function onMapClick(e) {
-    // skriv koden din her
+  console.log(e.latlng);
 }
 
 map.on('click', onMapClick);
@@ -56,7 +56,7 @@ map.on('click', onMapClick);
 const olavTryggvason = [63.430, 10.395];
 // Endre den neste linjen slik at kartet viser Trondheim. Bruk zoomnivå 12. Se
 // Se http://leafletjs.com/reference-1.0.3.html#map-methods-for-modifying-map-state
-map.setView([0,0], 4);
+map.setView(olavTryggvason, 12);
 
 
 /*
@@ -76,13 +76,29 @@ map.setView([0,0], 4);
  Se ellers http://leafletjs.com/reference-1.0.3.html#map-methods-for-modifying-map-state
 
 
-*/
+ */
 
 
 const nidarosdomen = [63.42683, 10.39693];
 const lerkendal = [63.41235, 10.40446];
+const trampe = [63.428023041708975, 10.403357505806527];
+
+const flyOptions = {duration: 0.9};
+
 document.querySelector('.js-nidarosdomen').addEventListener('click', () => {
-    // din kode her
+  map.flyTo(nidarosdomen, 17, flyOptions)
+});
+
+document.querySelector('.js-lerkendal').addEventListener('click', () => {
+  map.flyTo(lerkendal, 16, flyOptions);
+});
+
+document.querySelector('.js-sykkelheisen').addEventListener('click', () => {
+  map.flyTo(trampe, 18, flyOptions);
+});
+
+document.querySelector('.js-heletrondheim').addEventListener('click', () => {
+  map.flyTo(olavTryggvason, 12, flyOptions);
 });
 
 
@@ -99,7 +115,6 @@ document.querySelector('.js-nidarosdomen').addEventListener('click', () => {
 // Endre koden ovenfor oppgaveteksten til oppgave 1.4
 
 
-
 /*
  Oppgave 1.5
 
@@ -113,4 +128,4 @@ document.querySelector('.js-nidarosdomen').addEventListener('click', () => {
  Se http://leafletjs.com/reference-1.0.3.html#marker
  */
 
-// din kode her
+L.marker(trampe).addTo(map);
