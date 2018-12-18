@@ -13,7 +13,7 @@ const bakgrunnsLag = L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{
   id: 'mapbox.streets',
   accessToken: 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw'
 });
-const duration = 0.5;
+const duration = 0.9;
 
 // Avgrensning av kartet for oppgave 2.1
 const boundarySouthWest = [62.61356, 7.51465];
@@ -119,19 +119,19 @@ nidarosdomenPolygon.bindPopup('Nidarosdomen');
  Se http://leafletjs.com/reference-1.0.3.html#map-flytobounds
  */
 document.querySelector('.js-nidarosdomen').addEventListener('click', () => {
-  map.flyTo([63.42683, 10.39693], 18, {
+  map.flyToBounds(nidarosdomenPolygon.getBounds(), {
     duration
   });
 });
 
 document.querySelector('.js-lerkendal').addEventListener('click', () => {
-  map.flyTo([63.41235, 10.40446], 18, {
+  map.flyTo(lerkendal, 18, {
     duration
   });
 });
 
 document.querySelector('.js-sykkelheisen').addEventListener('click', () => {
-  map.flyTo([63.428, 10.40339], 18, {
+  map.flyToBounds(trampePolyline.getBounds(), {
     duration
   });
 });

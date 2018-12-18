@@ -65,8 +65,8 @@ map.addLayer(bakgrunnsLag);
 // deklarer heat som et heatlayer og legg laget til på map.
 // fjere i tillegg utkommenteringen under funksjonen addVegobjekter.
 
-// const heat = ;
-// map.addLayer(heat);
+const heat = L.heatLayer();
+map.addLayer(heat);
 
 
 map.on('moveend', function () {
@@ -120,7 +120,7 @@ function addVegobjekter (result) {
 
             vegobjekter[vegobjekt.id] = true;
 
-            //heat.addLatLng(point.coordinates);
+            heat.addLatLng(point.coordinates);
 
         }
     })

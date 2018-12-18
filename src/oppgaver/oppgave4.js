@@ -1,30 +1,29 @@
 /*
-Oppgave 4: Markercluster
+ Oppgave 4: Markercluster
 
-I denne oppgaven vil vi jobbe med et mye større datasett: Vegobjekttypen
-trafikkulykke, med id lik 570. For datasett av denne størrelsen, er vi nødt til
-å bruke andre teknikker for å få til en fornuftig visualisering på kart.
+ I denne oppgaven vil vi jobbe med et mye større datasett: Vegobjekttypen
+ trafikkulykke, med id lik 570. For datasett av denne størrelsen, er vi nødt til
+ å bruke andre teknikker for å få til en fornuftig visualisering på kart.
  */
 const NVDBAPI = 'https://www.vegvesen.no/nvdb/api/v2';
 
 const bakgrunnsLag = L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
-    maxZoom: 18,
-    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
-        '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
-        'Imagery © <a href="http://mapbox.com">Mapbox</a>',
-    id: 'mapbox.streets',
-    accessToken: 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw'
+  maxZoom: 18,
+  attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+  '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+  'Imagery © <a href="http://mapbox.com">Mapbox</a>',
+  id: 'mapbox.streets',
+  accessToken: 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw'
 });
 
 
 const map = L.map('mapid', {
-    maxBounds: [[62.61356, 7.51465], [65.14611, 14.89746]],
-    minZoom: 6,
+  maxBounds: [[62.61356, 7.51465], [65.14611, 14.89746]],
+  minZoom: 6,
 });
 
 
 bakgrunnsLag.addTo(map);
-
 
 
 let vegobjekter = {};
@@ -32,12 +31,12 @@ let vegobjekter = {};
 
 const loadingIndicator = document.querySelector('.loading');
 
-function showLoadingIndicator () {
-    loadingIndicator.style.opacity = 1;
+function showLoadingIndicator() {
+  loadingIndicator.style.opacity = 1;
 }
 
-function hideLoadingIndicator () {
-    loadingIndicator.style.opacity = 0;
+function hideLoadingIndicator() {
+  loadingIndicator.style.opacity = 0;
 }
 
 /*
@@ -54,96 +53,96 @@ function hideLoadingIndicator () {
  som igjen legges til kartet.
  */
 
-function fetchVegobjekter () {
+function fetchVegobjekter() {
 
-    // URL mangler antall og kartutsnitt, det er din oppgave å rette på det.
-    const url = NVDBAPI + '/vegobjekter/570.json?inkluder=geometri&srid=wgs84'; 
+  let mapBoundsString = map.getBounds().toBBoxString();
+  console.log(mapBoundsString);
 
-    showLoadingIndicator();
+  // URL mangler antall og kartutsnitt, det er din oppgave å rette på det.
+  const url = NVDBAPI + `/vegobjekter/570.json?inkluder=geometri&srid=wgs84&kartutsnitt=${mapBoundsString}&antall=200`;
 
-    fetch(url)
-        .then((response) => {
-            return response.json()
+  showLoadingIndicator();
 
-        }).then((json) => {
-        hideLoadingIndicator();
+  fetch(url)
+    .then((response) => {
+      return response.json()
 
-        addVegobjekter(json.objekter);
+    }).then((json) => {
+    hideLoadingIndicator();
 
-    }).catch(function(ex) {
-        console.log('parsing failed', ex);
+    addVegobjekter(json.objekter);
 
-    })
+  }).catch(function(ex) {
+    console.log('parsing failed', ex);
+
+  })
 }
 
 
-function addVegobjekter (result) {
-    result.forEach(vegobjekt => {
+function addVegobjekter(result) {
+  result.forEach(vegobjekt => {
 
-        if (!vegobjekter.hasOwnProperty(vegobjekt.id)) {
+    if (!vegobjekter.hasOwnProperty(vegobjekt.id)) {
 
-            const wkt = vegobjekt.geometri.wkt;
-            const point = Terraformer.WKT.parse(wkt);
+      const wkt = vegobjekt.geometri.wkt;
+      const point = Terraformer.WKT.parse(wkt);
 
-            vegobjekter[vegobjekt.id] = L.marker(point.coordinates, {
-                title: vegobjekt.id
-            }).on({
-                click: highlightFeature
-            });;
+      vegobjekter[vegobjekt.id] = L.marker(point.coordinates, {
+        title: vegobjekt.id
+      }).on({
+        click: highlightFeature
+      });
 
 
-            trafikkulykker.addLayer(vegobjekter[vegobjekt.id]);
-        }
+      trafikkulykker.addLayer(vegobjekter[vegobjekt.id]);
+    }
 
-    })
+  })
 }
 
 
 /*
-     4.2 Legg til markercluster
+ 4.2 Legg til markercluster
 
-     API-kallet i forrige oppgave resulterte i et uhåndterlig antall markører. 
-     Nettleseren ble delvis uresponsiv, og visningen på kart ga heller ikke stor mening.
+ API-kallet i forrige oppgave resulterte i et uhåndterlig antall markører.
+ Nettleseren ble delvis uresponsiv, og visningen på kart ga heller ikke stor mening.
 
-     Når vi opererer med så mange markører, gir det ikke mening å vise hver enkelt markør. 
-     Vi ønsker heller å gruppere markører som er nære hverandre, og fortelle med tall hvor 
-     mange markører som befinner seg innenfor hver gruppering. 
-     For å få til dette, kan vi bruke pluginen Leaflet.markercluster (https://github.com/Leaflet/Leaflet.markercluster).
+ Når vi opererer med så mange markører, gir det ikke mening å vise hver enkelt markør.
+ Vi ønsker heller å gruppere markører som er nære hverandre, og fortelle med tall hvor
+ mange markører som befinner seg innenfor hver gruppering.
+ For å få til dette, kan vi bruke pluginen Leaflet.markercluster (https://github.com/Leaflet/Leaflet.markercluster).
 
-     Legg til trafikkulykkene i L.markerClusterGroup, i stedet for L.layerGroup.
+ Legg til trafikkulykkene i L.markerClusterGroup, i stedet for L.layerGroup.
 
 
-     Tips: 
-     Du kan velge hvordan markerclustren skal se ut og oppføre seg.
-     Det er spesielt nyttig å endre verdien for maxClusterRadius, 
-     for å få kartet til å se mer tiltalende ut. Standardverdi er 80. Prøv å reduser den.
+ Tips:
+ Du kan velge hvordan markerclustren skal se ut og oppføre seg.
+ Det er spesielt nyttig å endre verdien for maxClusterRadius,
+ for å få kartet til å se mer tiltalende ut. Standardverdi er 80. Prøv å redusere den.
 
-*/
+ */
 
 
 const trafikkulykker = L.layerGroup();
 trafikkulykker.addTo(map);
 
 
-function highlightFeature (e) {
+function highlightFeature(e) {
 
-    const id = e.target.options.title;
-    const url = NVDBAPI + '/vegobjekter/570/' + id + '.json';
+  const id = e.target.options.title;
+  const url = NVDBAPI + '/vegobjekter/570/' + id + '.json';
 
-    fetch(url)
-        .then((response) => {
-            return response.json()
+  fetch(url)
+    .then((response) => {
+      return response.json()
 
-        }).then((json) => {
-        showInfo(json);
+    }).then((json) => {
+    showInfo(json);
 
-    }).catch((ex) => {
-        console.log('parsing failed', ex);
-    })
+  }).catch((ex) => {
+    console.log('parsing failed', ex);
+  })
 }
-
-
-
 
 
 /*
@@ -166,7 +165,6 @@ map.setView([63.430, 10.395], 15);
 fetchVegobjekter();
 
 
-
 /*
  4.4 Vis egenskapsdata
 
@@ -187,19 +185,19 @@ fetchVegobjekter();
 const trafikkulykkeTittel = document.querySelector('.trafikkulykke__id');
 const trafikkulykkeEgenskaper = document.querySelector('.trafikkulykke__egenskaper');
 
-function showInfo (vegobjekt) {
+function showInfo(vegobjekt) {
 
-    trafikkulykkeTittel.innerHTML = vegobjekt.id;
-    trafikkulykkeEgenskaper.innerHTML = '';
+  trafikkulykkeTittel.innerHTML = vegobjekt.id;
+  trafikkulykkeEgenskaper.innerHTML = '';
 
-    vegobjekt.egenskaper.forEach(egenskap => {
+  vegobjekt.egenskaper.forEach(egenskap => {
 
-        const tittel = document.createElement('dt');
-        const verdi = document.createElement('dd');
+    const tittel = document.createElement('dt');
+    const verdi = document.createElement('dd');
 
-        tittel.innerHTML = egenskap.navn;
-        verdi.innerHTML = egenskap.verdi;
+    tittel.innerHTML = egenskap.navn;
+    verdi.innerHTML = egenskap.verdi;
 
-        // legg til tittel og verdi på trafikkulykkeEgenskaper. Dette kan gjøres med javascriptfunksjonen appendChild.
-    });
+    // legg til tittel og verdi på trafikkulykkeEgenskaper. Dette kan gjøres med javascriptfunksjonen appendChild.
+  });
 }
